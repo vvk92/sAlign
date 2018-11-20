@@ -54,7 +54,7 @@
       transition:border ease-out 0.5s, background-color 0.5s ease-in ;
     }
     .fa-play, .fa-pause, .fa-step-forward{
-      font-size:2em;
+      font-size:1.3em;
       border:1px solid #ccc;
       border-radius:5px;
       cursor:pointer;
@@ -100,10 +100,11 @@
         var len1 = 0, len2 = 0; //store the length of sequences
         var timer, backtracktimer; //timer for animation
         var max=-Infinity, maxI = 0, maxJ=0;
+        var seq1, seq2;
       $(function(){
 
         //When the sequences are changed
-        $("input").on('change',function(){
+        $("input").on('change textInput input',function(){
             var indel = parseInt($("#indel").val()); 
             if(indel == "") indel = 0;
             var match = parseInt($("#match").val());
@@ -130,29 +131,32 @@
             mismatch = parseInt($("#mismatch").val());
             if(mismatch == "") mismatch = 0;
             //get length of sequences
-            var seq1 = $("#seq1").val();
-            var seq2 = $("#seq2").val();
-            seq1 = " "+seq1;
-            seq2 = " "+seq2;
+            seq1 = $("#seq1").val();
+            seq2 = $("#seq2").val();
             len1 = seq1.length;
             len2 = seq2.length;
             if(alignmentType == 4 && len1 > len2){
-              var temp = seq2;
-              seq2 = seq1;
-              seq1 = temp;
+              var temp = seq1;
+              seq1 = seq2;
+              seq2 = temp;
               len1 = seq1.length;
               len2 = seq2.length;
             }
+            
+            var tseq1 = " "+seq1;
+            var tseq2 = " "+seq2;
+            var tlen1 = seq1.length;
+            var tlen2 = seq2.length;
 
-            if(len1 > 1 && len2 > 1){
+            if(tlen1 > 1 && tlen2 > 1){
               //build the matrix
               var matrix = "<table class='table table-bordered'>";
-              for(var x = 0; x<=len1;x++){
+              for(var x = 0; x<=tlen1;x++){
                 matrix += "<tr>";
-                  for(var y=0; y<=len2; y++){
+                  for(var y=0; y<=tlen2; y++){
                     if(x == 0 && y == 0) matrix += "<td style='border:none !important'></td>";
-                    else if(x == 0) matrix += "<td class='matrix_title'>" + seq2.charAt(y-1) + "</td>";
-                    else if(y == 0) matrix += "<td class='matrix_title'>" + seq1.charAt(x-1) + "</td>";
+                    else if(x == 0) matrix += "<td class='matrix_title'>" + tseq2.charAt(y-1) + "</td>";
+                    else if(y == 0) matrix += "<td class='matrix_title'>" + tseq1.charAt(x-1) + "</td>";
                     
                     else{
                       matrix += "<td><div class='cellwrap'><div class='cell'  id='cell_"+(x-1)+"_"+(y-1)+"'></div>"+
@@ -178,9 +182,9 @@
             mismatch = parseInt($("#mismatch").val());
             if(mismatch == "") mismatch = 0;
             if(backtrack == 0)
-              timeoutglobal(i,j,$("#seq1").val().length,$("#seq2").val().length, match,mismatch,indel,0);
+              timeoutglobal(i,j,len1,len2, match,mismatch,indel,0);
             else
-              timeoutglobalBacktrack($("#seq1").val(),$("#seq2").val(), match,mismatch,indel, i,j,0);         
+              timeoutglobalBacktrack(seq1,seq2, match,mismatch,indel, i,j,0);         
         });
         //On click play button
         $(".fa-step-forward").click(function(){
@@ -191,9 +195,9 @@
             mismatch = parseInt($("#mismatch").val());
             if(mismatch == "") mismatch = 0;
             if(backtrack == 0)
-              timeoutglobal(i,j,$("#seq1").val().length,$("#seq2").val().length, match,mismatch,indel,1);
+              timeoutglobal(i,j,len1,len2, match,mismatch,indel,1);
             else
-              timeoutglobalBacktrack($("#seq1").val(),$("#seq2").val(), match,mismatch,indel, i,j,1);         
+              timeoutglobalBacktrack(seq1,seq2, match,mismatch,indel, i,j,1);         
         });
         //On click pause button
         $(".fa-pause").click(function(){
@@ -207,7 +211,7 @@
       /********************************/
       function timeoutglobal(x,y,l1, l2, match,mismatch, indel,step){
         timer = setTimeout(function(){
-                stepglobal(x,y,$("#seq1").val().length,$("#seq2").val().length, match,mismatch,indel);
+                stepglobal(x,y,len1,len2, match,mismatch,indel);
                 if(i >= len1) {  
                   i=len1-1;
                   j=len2-1; 
@@ -220,13 +224,13 @@
                   backtrack = 1;
                   $(".fa-arrow-righta, .fa-arrow-down, .fa-arrow-diag").addClass("sr-only");
                   if(step == 0)
-                    timeoutglobalBacktrack($("#seq1").val(),$("#seq2").val(), match,mismatch,indel, i,j, 0);         
+                    timeoutglobalBacktrack(seq1,seq2, match,mismatch,indel, i,j, 0);         
                   return; 
                 }
                 if(step == 0)
                 timeoutglobal(i,j,l1, l2, match,mismatch, indel, 0);
                 else return;
-        },100);
+        },$("#animationSpeed").val());
       }
       function timeoutglobalBacktrack(a1, a2, match, mismatch, indel, x, y,step){
         backtracktimer = setTimeout(function(){
@@ -234,9 +238,9 @@
                 if(i ==0 && j==0) {           
                   return; 
                 }
-                if(step == 0) timeoutglobalBacktrack($("#seq1").val(),$("#seq2").val(), match,mismatch,indel, i,j);
+                if(step == 0) timeoutglobalBacktrack(seq1,seq2, match,mismatch,indel, i,j, 0);
                 else return;
-        },1000);
+        },$("#animationSpeed").val());
       }
       function stepglobalBacktrack(a1,a2, match,mismatch,indel, x, y){
         globalBacktrack(a1, a2, match,mismatch,indel,x,y);
@@ -251,7 +255,7 @@
           }
         }
         else{
-          globalAlignment($("#seq1").val(),$("#seq2").val(),match,mismatch,indel,i,j);  
+          globalAlignment(seq1,seq2,match,mismatch,indel,i,j);  
           j++;
 
             if(j == len2+1) {
@@ -285,7 +289,7 @@
 
           if(i > len1) {
             i=1; j=1;
-            stepglobal(i,j,$("#seq1").val().length,$("#seq2").val().length, match,mismatch,indel);
+            stepglobal(i,j,len1,len2, match,mismatch,indel);
             return;
           }
       }
@@ -307,14 +311,14 @@
               maxJ = j;
             }
             if(alignmentType == 3){
-              if(i == a1.length){
+              if(i == a1.length-1){
                 if(val > max){
                   max = val;
                   maxI = i;
                   maxJ = j;
                 }
               }
-              else if(j == a2.length){
+              else if(j == a2.length-1){
                 if(val > max){
                   max = val;
                   maxI = i;
@@ -323,7 +327,7 @@
               }
             }
             if(alignmentType == 4){
-              if(i == a1.length){
+              if(i == a1.length-1){
                 if(val > max){
                   max = val;
                   maxI = i;
@@ -422,66 +426,6 @@
       
       }
 
-      /*
-      function globalAlignment(a1, a2, match, mismatch, indel){
-        for(var i = 1; i <= a1.length; i++){
-          var val = parseInt($("#cell_0_"+(i-1)).html())+parseInt(indel);
-          $("#cell_"+"0_"+i).html(val);
-        }
-        for(var i = 1; i <= a2.length; i++){
-          var val = parseInt($("#cell_"+(i-1)+"_0").html())+parseInt(indel);
-          $("#cell_"+i+"_0").html(val);
-        }
-
-        for(var i = 1; i <= a1.length+1; i++){
-          for(var j = 1; j <= a2.length+1; j++){
-            var score = 0;
-            if(a1.charAt(i-1) == a2.charAt(j-1) )
-              score = parseInt(match);
-            else score = parseInt(mismatch);
-            console.log(score);
-            var left = parseInt($("#cell_"+i+"_"+(j-1)).html()) + parseInt(indel);
-            var top = parseInt($("#cell_"+(i-1)+"_"+j).html()) + parseInt(indel);
-            var diag = parseInt($("#cell_"+(i-1)+"_"+(j-1)).html()) + parseInt(score);
-            var val = Math.max( left, top, diag);
-            $("#cell_"+i+"_"+j).html(val);
-          }
-        }
-
-      }
-
-
-      /*
-      public static int[][] ConstructMatrix(String a1, String a2, int gap, int match, int mismatch){
-		
-        char[] array1 = a1.toCharArray();
-        char[] array2 = a2.toCharArray();
-        int matrix[][] = new int[array1.length+1][array2.length+1];
-        //initialize first row
-        matrix[0][0] = 0;
-        for(int i=1;i<a2.toCharArray().length+1;i++) {
-          matrix[0][i] = matrix[0][i-1] + gap;
-        }
-        //initialize first columns
-        for(int j=1;j<a1.toCharArray().length+1;j++) {
-          matrix[j][0] = matrix[j-1][0] + gap;
-        }
-        //Fill the rest of the matrix
-        for(int i = 1;i< a1.toCharArray().length+1 ; i++) {
-          for(int j = 1;j< a2.toCharArray().length+1;j++) {					
-            int score = 0;
-    if(array1[i-1] == array2[j-1])
-        Score = match;
-    Else
-        Score = mismatch
-    //scoringMatrix[alphabets.indexOf(array1[i-1])][alphabets.indexOf(array2[j-1])];				
-                    matrix[i][j] = Math.max(matrix[i][j-1] + gap, Math.max(matrix[i-1][j] + gap, matrix[i-1][j-1] + score));	           
-          }
-        }
-        return matrix;
-      }
-      
-      */
 
     </script>
     <!-- Header -->
@@ -508,10 +452,11 @@
             <label for="seq1">Match</label><input type="text" class="form-control sequence" name="match" id = "match" value="1" placeholder = "Match" />
             <label for="seq1">Mismatch</label><input type="text" class="form-control sequence" name="mismatch" id = "mismatch" value="-1" placeholder = "Mismatch" />
             <label for="seq1">Indel</label><input type="text" class="form-control sequence" name="indel" id = "indel" value="-1" placeholder = "Indel" />
+            <label for="seq1">Animation speed (ms)</label><input type="text" class="form-control sequence" name="animationSpeed" id = "animationSpeed" value="500" placeholder = "Speed" />
             <div class="row">
-              <div class="col-md-2 offset-1"><span class="fa fa-play"></span></div>
-              <div class="col-md-2 offset-1"><span class="fa fa-pause"></span></div>
-              <div class="col-md-2 offset-1"><span class="fa fa-step-forward"></span></div>
+              <div class="col-md-4 "><span class="fa fa-play"></span></div>
+              <div class="col-md-4"><span class="fa fa-pause"></span></div>
+              <div class="col-md-4"><span class="fa fa-step-forward"></span></div>
             </div>
           </div>
             </div>
@@ -535,50 +480,24 @@
               <br>Vivek Chintalapati
             </p>
           </div>
-          <div class="col-md-4 mb-5 mb-lg-0">
-            <h4 class="text-uppercase mb-4">Around the Web</h4>
+          <div class="col-md-4 mb-5 mb-lg-0 offset-2">
+            <h4 class="text-uppercase mb-4">Also available on</h4>
             <ul class="list-inline mb-0">
               <li class="list-inline-item">
-                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="#">
-                  <i class="fab fa-fw fa-facebook-f"></i>
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="sAlign.apk">
+                  <i class="fab fa-android"></i>
                 </a>
               </li>
               <li class="list-inline-item">
-                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="#">
-                  <i class="fab fa-fw fa-google-plus-g"></i>
-                </a>
-              </li>
-              <li class="list-inline-item">
-                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="#">
-                  <i class="fab fa-fw fa-twitter"></i>
-                </a>
-              </li>
-              <li class="list-inline-item">
-                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="#">
-                  <i class="fab fa-fw fa-linkedin-in"></i>
-                </a>
-              </li>
-              <li class="list-inline-item">
-                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="#">
-                  <i class="fab fa-fw fa-dribbble"></i>
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="sAlign.appx">
+                  <i class="fab fa-windows"></i>
                 </a>
               </li>
             </ul>
           </div>
-          <div class="col-md-4">
-            <h4 class="text-uppercase mb-4">About Freelancer</h4>
-            <p class="lead mb-0">Freelance is a free to use, open source Bootstrap theme created by
-              <a href="http://startbootstrap.com">Start Bootstrap</a>.</p>
-          </div>
         </div>
       </div>
     </footer>
-
-    <div class="copyright py-4 text-center text-white">
-      <div class="container">
-        <small>Copyright &copy; Your Website 2018</small>
-      </div>
-    </div>
 
     <!-- Scroll to Top Button (Only visible on small and extra-small screen sizes) -->
     <div class="scroll-to-top d-lg-none position-fixed ">
